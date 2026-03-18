@@ -1,5 +1,32 @@
 # GitHub Repository Intelligence Analyzer
 
+## Requirements Fulfilled
+- **Input Handling**: Comma-separated URLs in web/CLI
+- **GitHub API**: Stars, forks, contributors, languages, commits, issues
+- **Activity Score**: `(commits/365*10) + (forks/100*10) + (stars/1000*30) + (contributors*0.5) + (issues/10)`
+- **Complexity**: `files/1000 + langs*0.4 + issues/100 + contributors/50`
+- **Difficulty**: Beginner (activity<20, complexity<3), Advanced (complexity>7 OR activity>80), else Intermediate
+- **Structured Report**: JSON/table with summary/details
+- **Edge Cases**: Defaults 0, error handling
+- **Efficiency**: 1hr cache, optional GITHUB_TOKEN (5000/hr vs 60/hr unauth)
+- **Docs**: This file
+- **Examples**: 5 repos button/CLI
+
+## Run
+```
+npm install
+npm start  # web: localhost:3000
+npm run analyze  # CLI
+```
+
+## Limitations
+- File count: approx (tree API)
+- Contributors: page 1 (100 max)
+- No private repos (public only)
+
+**Deploy**: `vercel --prod`
+
+
 ## Overview
 Tool that analyzes GitHub repositories for **activity**, **complexity**, and **learning difficulty**. Supports CLI and web UI. Deployed on Vercel.
 

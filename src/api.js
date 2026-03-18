@@ -9,30 +9,55 @@ const octokit = new Octokit({
 async function getRepoData(owner, repo) {
   try {
     const repoInfo = await octokit.rest.repos.get({ owner, repo });
-    const contributors = await octokit.rest.repos.listContributors({ owner, repo });
-    const { data: issues } = await octokit.rest.issues.listForRepo({ owner, repo, state: 'open' });
+    
+    // Total contributors count (not paginated list)
+    const repoStats = await octokit.rest.repos.get({ owner, repo });
+    
+    // Contributors with contributions (page 1, count unique)
+    const contributorsResp = await octokit.rest.repos.listContributors({ 
+      owner, repo, 
+      per_page: 100 
+    });
+    const contributors = (contributorsResp.data || []).filter(c => c && c.contributions > 0);
+    
+    // Separate Issues + PR counts using Search API
+    const issuesSearch = await octokit.rest.search.issuesAndPullRequests({
+      q: `repo:${owner}/${repo} type:issue state:open`
+    });
+    const prSearch = await octokit.rest.search.issuesAndPullRequests({
+      q: `repo:${owner}/${repo} type:pr state:open`
+    });
+    const issuesCount = issuesSearch.data.total_count;
+    const prCount = prSearch.data.total_count;
+    
     const { data: commits } = await octokit.rest.repos.listCommits({ owner, repo, per_page: 1 });
+    
     let license = null;
     try {
       license = await octokit.rest.licensing.getRepoLicense({ owner, repo });
     } catch {}
+    
     let readme = '';
     try {
       const { data } = await octokit.rest.repos.getReadme({ owner, repo });
-      readme = Buffer.from(data.content, 'base64').toString().slice(0, 500) + '...';
+      const readmeRaw = Buffer.from(data.content, 'base64').toString();
+      readme = readmeRaw; // Full complete README
     } catch {}
+    
     const languagesResp = await octokit.rest.repos.listLanguages({ owner, repo });
     const languages = Object.keys(languagesResp.data);
 
     return {
       ...repoInfo.data,
-      contributorsCount: contributors.data.length,
-      openIssues: issues.length,
+      contributorsCount: contributors.length,
+      openIssuesCount: issuesCount,
+      openPRCount: prCount,
+      openIssues: issuesCount + prCount,
       lastCommit: commits[0]?.commit.author.date || null,
       license: license?.data?.license?.name || null,
-      readmeSummary: readme,
+      readmeFull: readme,
       languages,
-      fileCount: 0 // TODO: estimate or tree API
+      fileCount: 0
     };
   } catch (error) {
     console.error(`Error fetching ${owner}/${repo}:`, error.message);
@@ -40,14 +65,4 @@ async function getRepoData(owner, repo) {
   }
 }
 
-async function checkFileExists(owner, repo, path) {
-  try {
-    await octokit.rest.repos.getContent({ owner, repo, path });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 module.exports = { getRepoData };
-
