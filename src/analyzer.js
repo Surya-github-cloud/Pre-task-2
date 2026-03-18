@@ -46,19 +46,23 @@ async function analyzeRepos(repoUrls, options = {}) {
   }
 
   const reposToAnalyze = repoUrls.map(url => {
-    let cleanUrl = url.replace(/https?:\/\/github\.com\//i, '').replace(/\/+$/, '').trim();
+    let cleanUrl = url.replace(/^https?:\/\/github\.com\//i, '').replace(/\/+$/, '').trim();
     const parts = cleanUrl.split('/');
     if (parts.length === 1) {
       cleanUrl = 'c2siorg/' + cleanUrl;
     } else if (parts.length > 2) {
       cleanUrl = parts[0] + '/' + parts[1];
+    } else if (parts.length === 2 && parts[0] === 'https:' || parts[0] === 'www') {
+      cleanUrl = parts.slice(-2).join('/');
     }
-    console.log('Cleaned URL:', cleanUrl);
     return cleanUrl;
-  }).filter(url => url.includes('/'));
+  }).filter(url => url.includes('/') && url.split('/').length === 2);
 
   for (const url of reposToAnalyze) {
-    const [owner, repo] = url.split('/').slice(-2);
+    const parts = url.split('/');
+    const owner = parts[0];
+    const repo = parts[1];
+    if (!owner || !repo) continue;
     const cacheKey = `${owner}/${repo}`;
     let data = cache.get(cacheKey);
 
