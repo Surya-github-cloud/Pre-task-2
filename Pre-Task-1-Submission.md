@@ -8,8 +8,8 @@
 
 ## Deliverable 1: Architecture Diagram
 
-> *<img width="940" height="1090" alt="image" src="https://github.com/user-attachments/assets/2ba52ecc-b62d-4eea-a622-3de70e5143bf" />
-*
+> <img width="940" height="1090" alt="image" src="https://github.com/user-attachments/assets/2ba52ecc-b62d-4eea-a622-3de70e5143bf" />
+
 
 ---
 
